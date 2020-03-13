@@ -1,6 +1,8 @@
 library(stringr)
 library(rvest)
 library(xml2)
+library(stringr)
+library(pdftools)
 
 webUrl = "https://www.jstage.jst.go.jp/browse/cbij/%s/%s/_contents/-char/en"
 htmlTags = list(
@@ -15,8 +17,18 @@ htmlTags = list(
 )
 
 
+getPdfName <- function(url){
+  x <- strsplit(url,"/")
+  name.txt <- x[[1]][8] 
+  name.txt
+}
+
+
 getPdf <- function(url){
-  # <TODO @Divya: parse the pdf from url, save it as .txt and return as well>
+  text <- pdf_text(url)
+  name = getPdfName(url)
+  write(text, name)
+  text
 }
 
 

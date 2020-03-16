@@ -4,16 +4,16 @@ library(xml2)
 library(stringr)
 library(pdftools)
 
-webUrl = "https://www.jstage.jst.go.jp/browse/cbij/%s/%s/_contents/-char/en"
+webUrl = "https://www.jstage.jst.go.jp/browse/cbij/%s/%s/_contents/-char/en/"
 htmlTags = list(
-  "article-list" = "search-resultslisting",
-  "article-title" = "searchlist-title",
-  "article-author" = "searchlist-authortags.customTooltip",
-  "article-additional-info" = "searchlist-additional-info",
-  "article-doi" = "searchlist-doi",
-  "article-pdf" = "lft",
-  "article-abstract" = "inner-content abstract",
-  "article-keywords" = "global-tags"
+  "article-list" = "div#search-resultslist-wrap",
+  "article-title" = "div.searchlist-title",
+  "article-author" = "div.searchlist-authortags.customTooltip",
+  "article-additional-info" = "div.searchlist-additional-info",
+  "article-doi" = "div.searchlist-doi",
+  "article-pdf" = "div.lft",
+  "article-abstract" = "div.inner-content abstract",
+  "article-keywords" = "div.global-tags"
 )
 
 
@@ -39,13 +39,64 @@ countSubLinks <- function(year){
 }
 
 
+getEmailAddress <- function(text){
+  # <TODO @Divya: parse the pdf text and return email address of authors>
+  email = NA
+  email
+}
+
+
 scrapePage <- function(url){
-  # <TODO @Kajal: parse the url page for information>
+  # <TODO @Kajal, status - DONE: parse the url page for information>
   # Title, Authors, Author Affiliations, 
   # Correspondence Author, Correspondence Author's Email
   # Publish Date, Abstract, Keywords, Full Paper (Text format)
   page = read_html(url)
-  
+  article_lists <- html_nodes(page, htmlTags[["article-list"]])
+  article_lists <- html_nodes(article_lists, "ul")
+  for(i in seq_along(article_lists)){
+    li = html_nodes(article_lists[[i]], "li")
+    for(j in seq_along(li)){
+      article_page = li[j]
+      article_title = html_text(html_node(article_page, htmlTags[['article-title']]))
+      article_author = html_text(html_node(article_page, htmlTags[['article-author']]))
+      article_doi = html_text(html_node(article_page, htmlTags[['article-doi']]))
+      
+      article_pdf = html_nodes(article_page, htmlTags[['article-pdf']])
+      article_pdf = html_nodes(article_pdf, "span")
+      article_pdf = html_nodes(article_pdf, ".bluelink-style")
+      article_pdf_link = html_attr(article_pdf, "href")
+      
+      article_additional_info = html_text(html_node(article_page, htmlTags[['article-additional-info']]))
+      published = regexpr("Published: .* \n", article_additional_info)
+      published = regmatches(article_additional_info, published)
+      published = substr(published, 0, str_length(published) - 3)
+      
+      released = regexpr("Released: .*", article_additional_info)
+      released = regmatches(article_additional_info, released)
+      released = substr(released, 0, str_length(released) - 1)
+      
+      article_keywords = html_node(article_page, htmlTags[['article-keywords']])
+      article_keywords = html_nodes(article_keywords, "span")
+      article_keywords = html_text(article_keywords)
+      
+      pdf_full_text = NA #getPdf(article_pdf_link) takes time so commeneted
+      
+      article_abstract = NA # <Todo Jasneek:> This is not working - html_text(html_node(article_page, htmlTags[['article-abstract']]))
+                            # Either fix above or parse abstract from pdf text returned by divya. Your call and task!
+      
+      author_email = getEmailAddress(pdf_full_text) # <Todo Divya:> Get email adress of authors from the pdf text. Use regexpr to get it.
+      
+      cat(j, "Article is ", article_title, "\n")
+      cat("Author: ", article_author, "\n")
+      cat("Author email: ", author_email, "\n")
+      cat("Article DOI: ", article_doi, "\n")
+      cat("Article pdf link: ", article_pdf_link, "\n")
+      cat("Additional Info: ", published, " ", released, "\n")
+      cat("Keywords: ", article_keywords, "\n")
+      cat("Abstract: ", article_abstract, "\n\n")
+    }
+  }
 }
 
 getJournal <- function(year){

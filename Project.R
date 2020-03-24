@@ -1,3 +1,9 @@
+"Group 6
+Kajal Gupta - kg494@njit.edu
+Divyakumar C Patel - dp762@njit.edu
+Jasneek Singh Chugh - jc2433@njit.edu
+"
+
 library(stringr)
 library(rvest)
 library(xml2)
@@ -19,6 +25,12 @@ htmlTags = list(
 parsedData <<- data.frame()
 
 getPdfName <- function(url){
+  "
+  Gets the unique name of the pdf so as to save it in the laptop.
+  Parameter: Pdf url
+  Returns: Unique name of the pdf
+  "
+  
   x <- strsplit(url,"/")
   name.txt <- x[[1]][8] 
   name.txt
@@ -26,6 +38,11 @@ getPdfName <- function(url){
 
 
 getPdf <- function(url){
+  "
+  Scrapes the pdf from the given url.
+  Parameter: Url of the pdf
+  Returns: Full text of the pdf
+  "
   if(is.na(url)){
     return(NA)
   }
@@ -41,6 +58,12 @@ getPdf <- function(url){
 
 
 getAbstract<- function(text){
+  "
+  Extracts the abstract from the pdf text.
+  Parameter: pdf full text
+  Returns: Abstract of the paper
+  "
+  
   abs<-text[[1]][1]
   article_abstract=regexpr("Abstract(.*?)(Key)",abs)
   article_abstract = regmatches(abs, article_abstract)
@@ -52,6 +75,12 @@ getAbstract<- function(text){
 
 
 countSubLinks <- function(year){
+  "
+  Count the published volumes in an year.
+  Parameter: year
+  Returns: Number of published volume in the year
+  "
+  
   n = 1
   if(year <= 2020 & year > 2008){
     n=1
@@ -67,12 +96,26 @@ countSubLinks <- function(year){
 
 
 getEmailAddress <- function(text){
+  "
+  Extracts the email address of the authors from the pdf.
+  Parameter: pdf full text
+  Returns: Email addresses of the Authors
+  "
+  
   emails = unlist(regmatches(text, gregexpr("([_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,4}))", text)))
   emails = paste(emails, collapse = ",")
 }
 
 
 scrapePage <- function(url){
+  "
+  Scrapes the volume for given year. A year contain different volumes, this function works on
+  individual volume to scrape. See the countSubLinks() which determines the published volume count
+  in an year.
+  Parameter: url of the volume to scrape
+  Returns: None. It stores the parsed info in a global dataframe parsedData
+  "
+  
   page = read_html(url)
   article_lists <- html_nodes(page, htmlTags[["article-list"]])
   article_lists <- html_nodes(article_lists, "ul")
@@ -133,14 +176,24 @@ scrapePage <- function(url){
                                                   "Published"=toString(sub("Published: |", "", published)), 
                                                   "Released"=toString(sub("Released: |", "", released)),
                                                   "Keywords"= toString(article_keywords),
-                                                  "Abstract"=article_abstract,
-                                                  "Full-Text"=pdf_full_text
+                                                  "Abstract"=toString(article_abstract),
+                                                  "Full-Text"=toString(pdf_full_text)
                                                   ))
     }
   }
 }
 
+
 getJournal <- function(year){
+  "
+  This is the main function which needs to be called to extract the issues of particular year
+  Parameter: year in 2001-2020
+  Returns: None. Save the entire scrape results in Summary.csv file. Summary.csv needs to be imported in 
+          in Excel using import csv data method in Excel. Otherwise data will appeared scattered and
+          misalligned if not imported as .csv file.
+          Blank Excel Sheet-> Data-> From Text/Csv-> choose Summary.csv-> Load
+  "
+  
   if(year > 2020 | year < 2001){
     stop("The articles for the given year does not exist for our Journal. Please provide year between 2001-2020")
   }
@@ -164,5 +217,6 @@ getJournal <- function(year){
   cat("Writing all the information in Summary.csv \n")
   parsedData[parsedData == ""] <-NA
   write.csv(parsedData, "Summary.csv")
+  cat("Completed writing all the information in Summary.csv \n")
 }
   

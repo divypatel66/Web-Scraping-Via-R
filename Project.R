@@ -32,8 +32,22 @@ getPdf <- function(url){
   
   text <- pdf_text(url)
   name = getPdfName(url)
-  # write(text, name)
+  text = str_replace_all(text, "\n", "")
+  text = str_replace_all(text, "\t", " ")
+  text = str_replace_all(text, "\r", "")
+  # write(text, name) # uncomment this to save the pdf in laptop
   text
+}
+
+
+getAbstract<- function(text){
+  abs<-text[[1]][1]
+  article_abstract=regexpr("Abstract(.*?)(Key)",abs)
+  article_abstract = regmatches(abs, article_abstract)
+  article_abstract = substr(article_abstract, 9, str_length(article_abstract)-4)
+  article_abstract = str_replace_all(article_abstract, "\n", "")
+  article_abstract= as.character(article_abstract)
+  article_abstract = str_squish(str_trim(article_abstract))
 }
 
 
@@ -98,12 +112,11 @@ scrapePage <- function(url){
       pdf_full_text = getPdf(ifelse(length(article_pdf_link) > 0, article_pdf_link,  NA)) # takes time so commeneted
       pdf_full_text = paste(pdf_full_text, collapse = ',')
       
-      article_abstract = NA # <Todo Jasneek:> This is not working - html_text(html_node(article_page, htmlTags[['article-abstract']]))
-                            # Either fix above or parse abstract from pdf text returned by divya. Your call and task!
+      article_abstract = getAbstract(pdf_full_text)
       
       author_email = getEmailAddress(pdf_full_text)
       
-      cat("Article Title: ", article_title, "\n")
+      cat("\nArticle Title: ", article_title, "\n")
       cat("Author: ", article_author, "\n")
       cat("Correspondence's Email: ", author_email, "\n")
       cat("Article DOI: ", article_doi, "\n")
@@ -148,7 +161,7 @@ getJournal <- function(year){
     scrapePage(yearUrls[i])
   }
   
-  cat("Writing the information in Summary.csv \n")
+  cat("Writing all the information in Summary.csv \n")
   parsedData[parsedData == ""] <-NA
   write.csv(parsedData, "Summary.csv")
 }

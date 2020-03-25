@@ -2,6 +2,12 @@
 Kajal Gupta - kg494@njit.edu
 Divyakumar C Patel - dp762@njit.edu
 Jasneek Singh Chugh - jc2433@njit.edu
+
+getJournal(year) is the entry function which takes year and gives journal of that year ONLY.
+We have parsed all the years and store in Summary.csv
+
+getJournalThenOn(year) is the entry function which takes year and gives journal from that year 
+onwards till 2020 and saves in Summary.csv
 "
 
 library(stringr)
@@ -184,7 +190,7 @@ scrapePage <- function(url){
 }
 
 
-getJournal <- function(year){
+getJournal <- function(year, write=TRUE){
   "
   This is the main function which needs to be called to extract the issues of particular year
   Parameter: year in 2001-2020
@@ -212,6 +218,28 @@ getJournal <- function(year){
 
   for( i in seq_along(yearUrls)){
     scrapePage(yearUrls[i])
+  }
+  
+  if(write){
+    cat("Writing all the information in Summary.csv \n")
+    parsedData[parsedData == ""] <-NA
+    write.csv(parsedData, "Summary.csv")
+    cat("Completed writing all the information in Summary.csv \n")
+  }
+}
+
+getJournalThenOn <- function(year){
+  "
+  This is the main function which needs to be called to extract the issues of particular year and the following
+  years
+  Parameter: year in 2001-2020
+  Returns: None. Save the entire scrape results in Summary.csv file. Summary.csv needs to be imported in 
+          in Excel using import csv data method in Excel. Otherwise data will appeared scattered and
+          misalligned if not imported as .csv file.
+          Blank Excel Sheet-> Data-> From Text/Csv-> choose Summary.csv-> Load
+  "
+  for(i in seq(year%%100, 20)){
+    getJournal(2000+i, FALSE)
   }
   
   cat("Writing all the information in Summary.csv \n")
